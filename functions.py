@@ -156,13 +156,13 @@ def lowest_prob_pair(p):
     sorted_p = sorted(p.items(), key=lambda x: x[1])
     return sorted_p[0][0], sorted_p[1][0]
 
-def inv_dct(vBlocksFor_,hBlocksFor_,_Dct,windowSize,QT_):
+def inv_dct(vBlocksFor_,hBlocksFor_,_Dct,windowSize):
     _IDct = np.zeros((len(_Dct),len(_Dct[0])), np.float32) 
     for i in range(vBlocksFor_):
         for j in range(hBlocksFor_):
             #Gets the DCT for each section separated by windowSize spaces
             _IDct[i * windowSize: i * windowSize + windowSize, j * windowSize: j * windowSize + windowSize] = cv2.idct(
-                _Dct[i * windowSize: i * windowSize + windowSize, j * windowSize: j * windowSize + windowSize]) * QT_
+                _Dct[i * windowSize: i * windowSize + windowSize, j * windowSize: j * windowSize + windowSize])
     return _IDct
 
 def apply_dct(vBlocksFor_,hBlocksFor_,_Padded,_Dct,_q,_Zigzag,windowSize,QT_):

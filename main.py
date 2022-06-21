@@ -138,14 +138,23 @@ apply_dct(vBlocksForC, hBlocksForC, crPadded, crDct, crq, crZigzag, windowSize, 
 apply_dct(vBlocksForC, hBlocksForC, cbPadded, cbDct, cbq, cbZigzag, windowSize, QTC)
 
 
-yiDct = inv_dct(vBlocksForY, hBlocksForY, yq, windowSize,QTY)
-criDct = inv_dct(vBlocksForC, hBlocksForC, crq, windowSize,QTC)
-cbiDct = inv_dct(vBlocksForC, hBlocksForC, cbq, windowSize,QTC)
+yiDct = inv_dct(vBlocksForY, hBlocksForY, yq, windowSize)
+criDct = inv_dct(vBlocksForC, hBlocksForC, crq, windowSize)
+cbiDct = inv_dct(vBlocksForC, hBlocksForC, cbq, windowSize)
 
-print(criDct)
-print(crPadded)
-print(crq)
-
+imgrec2 = np.zeros((len(yiDct), len(yiDct[0]), 3), np.float32)
+for i in range(len(yiDct)):
+    for j in range(len(yiDct[0])):
+        try:
+            imgrec2[i, j, 0] = yiDct[i, j]
+            imgrec2[i, j, 1] = criDct[i//2, j//2]
+            imgrec2[i, j, 2] = cbiDct[i//2, j//2]
+        except IndexError:
+            continue
+     
+result2 = cv2.cvtColor(imgrec2.astype(np.uint8), cv2.COLOR_YCrCb2BGR)
+plt.imshow(result2)
+plt.show()
 
 
 
