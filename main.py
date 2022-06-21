@@ -32,7 +32,7 @@ QTC = np.array([[17, 18, 24, 47, 99, 99, 99, 99],  # chrominance quantization ta
 windowSize = len(QTY)
 
 # read image
-imgOriginal = imread('C:\\Users\\Usuario\\Desktop\\JPEG compresor\\migato.png')
+imgOriginal = imread('//home//yeison//Documents//GitHub//jpeg//migato.png')
 
 # show imge
 plt.imshow(imgOriginal)
