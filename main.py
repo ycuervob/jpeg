@@ -45,8 +45,7 @@ height = len(img)
 y = np.zeros((height, width), np.float32) + img[:, :, 0]
 cr = np.zeros((height, width), np.float32) + img[:, :, 1]
 cb = np.zeros((height, width), np.float32) + img[:, :, 2]
-print(img[0][0])
-print(y[0][0])
+
 # show imge
 plt.imshow(img)
 plt.show()
@@ -54,10 +53,7 @@ plt.show()
 # size of the image in bits before compression
 totalNumberOfBitsWithoutCompression = len(y) * len(y[0]) * 8 + len(cb) * len(cb[0]) * 8 + len(cr) * len(cr[0]) * 8
 
-# channel values should be normalized, hence subtract 128
-y = y - 128
-cr = cr - 128
-cb = cb - 128
+
 
 # 4: 2: 2 subsampling is used
 # another subsampling scheme can be used
@@ -96,22 +92,19 @@ else:
             crPadded[i, j] += crSub[i, j]
             cbPadded[i, j] += cbSub[i, j]
 
-print(img[0][0])
-print(yPadded[0][0])
 
 imgrec = np.zeros((len(yPadded), len(yPadded[0]), 3), np.float32)
 for i in range(len(yPadded)):
     for j in range(len(yPadded[0])):
         try:
             imgrec[i, j, 0] = yPadded[i, j]
-            imgrec[i, j, 1] = crPadded[i, j]
-            imgrec[i, j, 2] = cbPadded[i, j]
+            imgrec[i, j, 1] = crPadded[i//2, j//2]
+            imgrec[i, j, 2] = cbPadded[i//2, j//2]
         except IndexError:
             continue
      
-
 result = cv2.cvtColor(imgrec.astype(np.uint8), cv2.COLOR_YCrCb2BGR)
-plt.imshow(imgrec.astype(np.uint8))
+plt.imshow(result)
 plt.show()
 
 
@@ -145,9 +138,15 @@ apply_dct(vBlocksForC, hBlocksForC, crPadded, crDct, crq, crZigzag, windowSize, 
 apply_dct(vBlocksForC, hBlocksForC, cbPadded, cbDct, cbq, cbZigzag, windowSize, QTC)
 
 
-yiDct = inv_dct(vBlocksForY, hBlocksForY, yq, windowSize)
-criDct = inv_dct(vBlocksForC, hBlocksForC, crq, windowSize)
-cbiDct = inv_dct(vBlocksForC, hBlocksForC, cbq, windowSize)
+yiDct = inv_dct(vBlocksForY, hBlocksForY, yq, windowSize,QTY)
+criDct = inv_dct(vBlocksForC, hBlocksForC, crq, windowSize,QTC)
+cbiDct = inv_dct(vBlocksForC, hBlocksForC, cbq, windowSize,QTC)
+
+print(criDct)
+print(crPadded)
+print(crq)
+
+
 
 
 # set type for the zigzag vector
