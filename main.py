@@ -45,7 +45,8 @@ height = len(img)
 y = np.zeros((height, width), np.float32) + img[:, :, 0]
 cr = np.zeros((height, width), np.float32) + img[:, :, 1]
 cb = np.zeros((height, width), np.float32) + img[:, :, 2]
-
+print(img[0][0])
+print(y[0][0])
 # show imge
 plt.imshow(img)
 plt.show()
@@ -65,10 +66,8 @@ cb = cb - 128
 SSH, SSV = 2, 2
 
 # filter the chrominance channels using a 2x2 averaging filter # another type of filter can be used
-crf = cv2.boxFilter(cr, ddepth=-1, ksize=(2, 2))
-cbf = cv2.boxFilter(cb, ddepth=-1, ksize=(2, 2))
-crSub = crf[::SSV, ::SSH]
-cbSub = cbf[::SSV, ::SSH]
+crSub = cr[::SSV, ::SSH]
+cbSub = cb[::SSV, ::SSH]
 
 # check if padding is needed,
 # if yes define empty arrays to pad each channel DCT with zeros if necessary
@@ -97,13 +96,18 @@ else:
             crPadded[i, j] += crSub[i, j]
             cbPadded[i, j] += cbSub[i, j]
 
+print(img[0][0])
+print(yPadded[0][0])
 
 imgrec = np.zeros((len(yPadded), len(yPadded[0]), 3), np.float32)
 for i in range(len(yPadded)):
     for j in range(len(yPadded[0])):
-        imgrec[i, j, 0] = yPadded[i, j]
-        imgrec[i, j, 1] = crPadded[i//2, j//2]
-        imgrec[i, j, 2] = cbPadded[i//2, j//2]
+        try:
+            imgrec[i, j, 0] = yPadded[i, j]
+            imgrec[i, j, 1] = crPadded[i, j]
+            imgrec[i, j, 2] = cbPadded[i, j]
+        except IndexError:
+            continue
      
 
 result = cv2.cvtColor(imgrec.astype(np.uint8), cv2.COLOR_YCrCb2BGR)
