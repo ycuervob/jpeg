@@ -1,5 +1,6 @@
 # python 3.9.5
 from PIL import Image as im
+from cv2 import line
 from functions import *
 from collections import Counter
 from skimage.io import imshow, imread
@@ -7,8 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 from math import ceil
-import sys
-sys.setrecursionlimit(10000)
 
 # define quantization tables
 QTY = np.array([[16, 11, 10, 16, 24, 40, 51, 61],  # luminance quantization table
@@ -32,7 +31,7 @@ QTC = np.array([[17, 18, 24, 47, 99, 99, 99, 99],  # chrominance quantization ta
 windowSize = len(QTY)
 
 # read image
-imgOriginal = imread('//home//yeison//Documents//GitHub//jpeg//migato.png')
+imgOriginal = imread('C:\\Users\\Usuario\\Desktop\\JPEG compresor\\migato.png')
 
 # show imge
 plt.imshow(imgOriginal)
@@ -132,11 +131,10 @@ crZigzag = np.zeros(((vBlocksForC * hBlocksForC), windowSize * windowSize))
 cbZigzag = np.zeros(((vBlocksForC * hBlocksForC), windowSize * windowSize))
 
 # Calculates the DCT for the component Y of the image
-apply_dct(vBlocksForY, hBlocksForY, yPadded, yDct, yq, yZigzag, windowSize, QTY)
+apply_dct(vBlocksForY, hBlocksForY, yPadded, yDct, yq, yZigzag, windowSize)
 # Either crq or cbq can be used to compute the number of blocks
-apply_dct(vBlocksForC, hBlocksForC, crPadded, crDct, crq, crZigzag, windowSize, QTC)
-apply_dct(vBlocksForC, hBlocksForC, cbPadded, cbDct, cbq, cbZigzag, windowSize, QTC)
-
+apply_dct(vBlocksForC, hBlocksForC, crPadded, crDct, crq, crZigzag, windowSize)
+apply_dct(vBlocksForC, hBlocksForC, cbPadded, cbDct, cbq, cbZigzag, windowSize)
 
 yiDct = inv_dct(vBlocksForY, hBlocksForY, yq, windowSize)
 criDct = inv_dct(vBlocksForC, hBlocksForC, crq, windowSize)
@@ -166,9 +164,14 @@ cbZigzag = cbZigzag.astype(np.int16)
 
 # find the run length encoding for each channel
 # then get the frequency of each component in order to form a Huffman dictionary
+
 yEncoded = run_length_encoding(yZigzag)
 yFrequencyTable = get_freq_dict(yEncoded)
 yHuffman = find_huffman(yFrequencyTable)
+
+invyHuffman = {}
+for i in yHuffman.keys():
+    invyHuffman[yHuffman[i]] = i
 
 crEncoded = run_length_encoding(crZigzag)
 crFrequencyTable = get_freq_dict(crEncoded)
@@ -194,12 +197,24 @@ for value in cbEncoded:
     cbBitsToTransmit += cbHuffman[value]
 
 if file.writable():
-    file.write(yBitsToTransmit + "\n" +
-               crBitsToTransmit + "\n" + cbBitsToTransmit)
+    file.write(yBitsToTransmit + "\n" + crBitsToTransmit + "\n" + cbBitsToTransmit)
 
 file.close()
 
-totalNumberOfBitsAfterCompression = len(
-    yBitsToTransmit) + len(crBitsToTransmit) + len(cbBitsToTransmit)
-print("Compression Ratio is " + str(np.round(totalNumberOfBitsWithoutCompression /
-      totalNumberOfBitsAfterCompression, 1)))
+file = open("CompressedImage.asfh", "r")
+
+liney = file.readline()
+index_init = 0
+index_final = 0
+decodingy = []
+
+for i in liney:
+    index_final += 1
+    if liney[index_init:index_final] in invyHuffman.keys():
+        decodingy.append(invyHuffman[liney[index_init:index_final]])
+        index_init = index_final
+print(len(decodingy),len(yEncoded))
+file.close()
+
+totalNumberOfBitsAfterCompression = len( yBitsToTransmit) + len(crBitsToTransmit) + len(cbBitsToTransmit)
+print("Compression Ratio is " + str(np.round(totalNumberOfBitsWithoutCompression / totalNumberOfBitsAfterCompression, 1)))

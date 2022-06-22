@@ -1,12 +1,11 @@
 # python 3.9.5
 from math import ceil
-import sys
-sys.setrecursionlimit(10000)
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from skimage.io import imshow, imread
 from collections import Counter
+from scipy.fftpack import fft, dct,idct
 
 
 def zigzag(matrix: np.ndarray) -> np.ndarray:
@@ -133,22 +132,31 @@ def find_huffman(p: dict) -> dict:
     :param dict p: frequency table
     :returns: huffman code for each symbol
     """
-    # Base case of only two symbols, assign 0 or 1 arbitrarily; frequency does not matter
-    if len(p) == 2:
-        return dict(zip(p.keys(), ['0', '1']))
+    p_copy = {}
+    p_copy2 = {}
+    for i in p.keys():
+        p_copy[i] = ""
+        p_copy2[str(i)] = ""
 
-    # Create a new distribution by merging lowest probable pair
-    p_prime = p.copy()
-    a1, a2 = lowest_prob_pair(p)
-    p1, p2 = p_prime.pop(a1), p_prime.pop(a2)
-    p_prime[a1 + a2] = p1 + p2
+    while len(p_copy2)>=2:
+        a1, a2 = lowest_prob_pair(p_copy2)
+        p1, p2 = p_copy2.pop(a1), p_copy2.pop(a2)
+        
+        for i in a1.split("|"):
+            if 'EOB' not in i:
+                p_copy[tuple(map(int, i.replace('(','').replace(')','').split(', ')))] += "1"
+            else:
+                p_copy[('EOB',)] += "1"
 
-    # Recurse and construct code on new distribution
-    c = find_huffman(p_prime)
-    ca1a2 = c.pop(a1 + a2)
-    c[a1], c[a2] = ca1a2 + '0', ca1a2 + '1'
+        for i in a2.split("|"):
+            if 'EOB' not in i:
+                p_copy[tuple(map(int, i.replace('(','').replace(')','').split(', ')))] += "0"
+            else:
+                p_copy[('EOB',)] += "0"
 
-    return c
+        p_copy2[a1+ "|"+ a2] = p1 + p2
+
+    return p_copy
 
 
 def lowest_prob_pair(p):
@@ -165,7 +173,7 @@ def inv_dct(vBlocksFor_,hBlocksFor_,_Dct,windowSize):
                 _Dct[i * windowSize: i * windowSize + windowSize, j * windowSize: j * windowSize + windowSize])
     return _IDct
 
-def apply_dct(vBlocksFor_,hBlocksFor_,_Padded,_Dct,_q,_Zigzag,windowSize,QT_):
+def apply_dct(vBlocksFor_,hBlocksFor_,_Padded,_Dct,_q,_Zigzag,windowSize):
     #Calculates the DCT for the component Y of the image
     for i in range(vBlocksFor_):
         for j in range(hBlocksFor_):
@@ -174,8 +182,8 @@ def apply_dct(vBlocksFor_,hBlocksFor_,_Padded,_Dct,_q,_Zigzag,windowSize,QT_):
                 _Padded[i * windowSize: i * windowSize + windowSize, j * windowSize: j * windowSize + windowSize])
 
             #Once with the DCT then apply the ceil function to get the cuantized values
-            _q[i * windowSize: i * windowSize + windowSize, j * windowSize: j * windowSize + windowSize] = np.ceil(
-                _Dct[i * windowSize: i * windowSize + windowSize, j * windowSize: j * windowSize + windowSize] / QT_)
+            _q[i * windowSize: i * windowSize + windowSize, j * windowSize: j * windowSize + windowSize] = np.round(
+                _Dct[i * windowSize: i * windowSize + windowSize, j * windowSize: j * windowSize + windowSize])
 
             #Put the matrix form into a vector
             _Zigzag[i * j] += zigzag(_q[i * windowSize: i * windowSize + windowSize, j * windowSize: j * windowSize + windowSize])
