@@ -213,7 +213,7 @@ for i in liney:
     if liney[index_init:index_final] in invyHuffman.keys():
         decodingy.append(invyHuffman[liney[index_init:index_final]])
         index_init = index_final
-print(len(decodingy),len(yEncoded))
+        
 file.close()
 
 totalNumberOfBitsAfterCompression = len( yBitsToTransmit) + len(crBitsToTransmit) + len(cbBitsToTransmit)
