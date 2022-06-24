@@ -1,14 +1,16 @@
 # python 3.9.5
-from PIL import Image as im
-from cv2 import line
 from functions import *
-from collections import Counter
-from skimage.io import imshow, imread
+from skimage.io import imread
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 import urllib.request
 from math import ceil
+
+from functions import dct_idct
+from functions import run_legth
+from functions import huffman
+from functions import showImg
 
 # define window size
 windowSize = 8
@@ -31,8 +33,7 @@ cr = np.zeros((height, width), np.float32) + imgInYCrCb[:, :, 1]
 cb = np.zeros((height, width), np.float32) + imgInYCrCb[:, :, 2]
 
 # size of the image in bits before compression
-totalNumberOfBitsWithoutCompression = len(
-    y) * len(y[0]) * 8 + len(cb) * len(cb[0]) * 8 + len(cr) * len(cr[0]) * 8
+totalNumberOfBitsWithoutCompression = len(y) * len(y[0]) * 8 + len(cb) * len(cb[0]) * 8 + len(cr) * len(cr[0]) * 8
 
 # 4: 2: 2 subsampling is used
 # another subsampling scheme can be used
@@ -73,20 +74,8 @@ else:
             crPadded[i, j] += crSub[i, j]
             cbPadded[i, j] += cbSub[i, j]
 
-
-compressionColor = np.zeros((len(yPadded), len(yPadded[0]), 3), np.float32)
-for i in range(len(yPadded)):
-    for j in range(len(yPadded[0])):
-        try:
-            compressionColor[i, j, 0] = yPadded[i, j]
-            compressionColor[i, j, 1] = crPadded[i//2, j//2]
-            compressionColor[i, j, 2] = cbPadded[i//2, j//2]
-        except IndexError:
-            continue
-
-compressionColorRGB = cv2.cvtColor(
-    compressionColor.astype(np.uint8), cv2.COLOR_YCrCb2BGR)
-
+compressionColor = showImg.createImg(yPadded,crPadded,cbPadded)
+compressionColorRGB = cv2.cvtColor(compressionColor.astype(np.uint8), cv2.COLOR_YCrCb2BGR)
 
 # get DCT of each channel
 # define three empty matrices
@@ -111,12 +100,12 @@ yq, crq, cbq = np.zeros((yLength, yWidth)), np.zeros(
 yZigzag = []
 crZigzag = []
 cbZigzag = []
-
 # Calculates the DCT for the component Y of the image
-apply_dct(vBlocksForY, hBlocksForY, yPadded, yDct, yq, yZigzag, windowSize)
+
+dct_idct.apply_dct(vBlocksForY, hBlocksForY, yPadded, yDct, yq, yZigzag, windowSize)
 # Either crq or cbq can be used to compute the number of blocks
-apply_dct(vBlocksForC, hBlocksForC, crPadded, crDct, crq, crZigzag, windowSize)
-apply_dct(vBlocksForC, hBlocksForC, cbPadded, cbDct, cbq, cbZigzag, windowSize)
+dct_idct.apply_dct(vBlocksForC, hBlocksForC, crPadded, crDct, crq, crZigzag, windowSize)
+dct_idct.apply_dct(vBlocksForC, hBlocksForC, cbPadded, cbDct, cbq, cbZigzag, windowSize)
 
 
 # set type for the zigzag vector
@@ -129,17 +118,17 @@ print(yZigzag[0])
 # find the run length encoding for each channel
 # then get the frequency of each component in order to form a Huffman dictionary
 
-yEncoded = run_length_encod(yZigzag.flatten())
-yFrequencyTable = get_freq_dict(yEncoded)
-yHuffman = find_huffman(yFrequencyTable)
+yEncoded = run_legth.run_length_encod(yZigzag.flatten())
+yFrequencyTable = huffman.get_freq_dict(yEncoded)
+yHuffman = huffman.find_huffman(yFrequencyTable)
 
-crEncoded = run_length_encod(crZigzag.flatten())
-crFrequencyTable = get_freq_dict(crEncoded)
-crHuffman = find_huffman(crFrequencyTable)
+crEncoded = run_legth.run_length_encod(crZigzag.flatten())
+crFrequencyTable = huffman.get_freq_dict(crEncoded)
+crHuffman = huffman.find_huffman(crFrequencyTable)
 
-cbEncoded = run_length_encod(cbZigzag.flatten())
-cbFrequencyTable = get_freq_dict(cbEncoded)
-cbHuffman = find_huffman(cbFrequencyTable)
+cbEncoded = run_legth.run_length_encod(cbZigzag.flatten())
+cbFrequencyTable = huffman.get_freq_dict(cbEncoded)
+cbHuffman = huffman.find_huffman(cbFrequencyTable)
 
 # calculate the number of bits to transmit for each channel
 # and write them to an output file
@@ -209,13 +198,13 @@ crread = decodeFile.readline()
 cbread = decodeFile.readline()
 decodeFile.close()
 
-ydecoded = decode_huffman(yread,invyHuffman)
-crdecoded = decode_huffman(crread,invcrHuffman)
-cbdecoded = decode_huffman(cbread,invcbHuffman)
+ydecoded = huffman.decode_huffman(yread,invyHuffman)
+crdecoded = huffman.decode_huffman(crread,invcrHuffman)
+cbdecoded = huffman.decode_huffman(cbread,invcbHuffman)
 
-yraw = np.array(run_length_decoding(ydecoded))
-crraw = np.array(run_length_decoding(crdecoded))
-cbraw = np.array(run_length_decoding(cbdecoded))
+yraw = np.array(run_legth.run_length_decoding(ydecoded))
+crraw = np.array(run_legth.run_length_decoding(crdecoded))
+cbraw = np.array(run_legth.run_length_decoding(cbdecoded))
 
 
 
