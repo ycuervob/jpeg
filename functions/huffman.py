@@ -1,5 +1,11 @@
 from collections import Counter
 
+def get_inverse_huffman(Huffman):
+    invyHuffman = {}
+    for i in Huffman.keys():
+        invyHuffman[Huffman[i]] = i
+    return invyHuffman
+
 def get_freq_dict(array: list) -> dict:
     """
     returns a dict where the keys are the values of the array, and the values are their frequencies
