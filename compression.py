@@ -1,11 +1,10 @@
 # python 3.9.5
-from functions import *
+from os import system
 from skimage.io import imread
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 import urllib.request
-
 from functions import dct_idct
 from functions import run_legth
 from functions import huffman
@@ -100,18 +99,9 @@ cbHuffman = huffman.find_huffman(cbFrequencyTable)
 
 # calculate the number of bits to transmit for each channel
 # and write them to an output file
-yBitsToTransmit = []
-for value in yEncoded:
-    yBitsToTransmit.append(yHuffman[value])
-
-crBitsToTransmit = []
-for value in crEncoded:
-    crBitsToTransmit.append(crHuffman[value])
-
-cbBitsToTransmit = []
-for value in cbEncoded:
-    cbBitsToTransmit.append(cbHuffman[value])
-
+yBitsToTransmit = huffman.get_stream_to_transmit(yHuffman,yEncoded)
+crBitsToTransmit = huffman.get_stream_to_transmit(crHuffman,crEncoded)
+cbBitsToTransmit = huffman.get_stream_to_transmit(cbHuffman,cbEncoded)
 
 # show imge
 plt.figure()
@@ -166,8 +156,10 @@ crraw = np.array(run_legth.run_length_decoding(crdecoded))
 cbraw = np.array(run_legth.run_length_decoding(cbdecoded))
 
 
+con1 = ydecoded == yEncoded
+con2 = crdecoded == crEncoded
+con3 = cbdecoded == cbEncoded
 
-
-plt.show()
+input()
 
 #ydataimg = inv_dct(vBlocksForY, hBlocksForY, yimg, windowSize)
