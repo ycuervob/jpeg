@@ -9,60 +9,7 @@ from scipy.fftpack import fft, dct, idct
 
 
 def zigzag(matrix: np.ndarray) -> np.ndarray:
-    """
-    computes the zigzag of a quantized block
-    :param numpy.ndarray matrix: quantized matrix
-    :returns: zigzag vectors in an array
-    """
-    # initializing the variables
-    h = 0
-    v = 0
-    v_min = 0
-    h_min = 0
-    v_max = matrix.shape[0]
-    h_max = matrix.shape[1]
-    i = 0
-    output = np.zeros((v_max * h_max))
-
-    while (v < v_max) and (h < h_max):
-        if ((h + v) % 2) == 0:  # going up
-            if v == v_min:
-                output[i] = matrix[v, h]  # first line
-                if h == h_max:
-                    v = v + 1
-                else:
-                    h = h + 1
-                i = i + 1
-            elif (h == h_max - 1) and (v < v_max):  # last column
-                output[i] = matrix[v, h]
-                v = v + 1
-                i = i + 1
-            elif (v > v_min) and (h < h_max - 1):  # all other cases
-                output[i] = matrix[v, h]
-                v = v - 1
-                h = h + 1
-                i = i + 1
-        else:  # going down
-            if (v == v_max - 1) and (h <= h_max - 1):  # last line
-                output[i] = matrix[v, h]
-                h = h + 1
-                i = i + 1
-            elif h == h_min:  # first column
-                output[i] = matrix[v, h]
-                if v == v_max - 1:
-                    h = h + 1
-                else:
-                    v = v + 1
-                i = i + 1
-            elif (v < v_max - 1) and (h > h_min):  # all other cases
-                output[i] = matrix[v, h]
-                v = v + 1
-                h = h - 1
-                i = i + 1
-        if (v == v_max - 1) and (h == h_max - 1):  # bottom right element
-            output[i] = matrix[v, h]
-            break
-    return output
+    return matrix.flatten()
 
 
 def trim(array: np.ndarray) -> np.ndarray:
@@ -76,45 +23,28 @@ def trim(array: np.ndarray) -> np.ndarray:
         trimmed = np.zeros(1)
     return trimmed
 
-
-def run_length_encoding(array: np.ndarray) -> list:
-    """
-    finds the intermediary stream representing the zigzags
-    format for DC components is <size><amplitude>
-    format for AC components is <run_length, size> <Amplitude of non-zero>
-    :param numpy.ndarray array: zigzag vectors in array
-    :returns: run length encoded values as an array of tuples
-    """
-    encoded = list()
-    run_length = 0
-    eob = ("EOB",)
-
-    for i in range(len(array)):
-        for j in range(len(array[i])):
-            trimmed = trim(array[i])
-            if j == len(trimmed):
-                encoded.append(eob)  # EOB
-                break
-            if i == 0 and j == 0:  # for the first DC component
-                encoded.append((int(trimmed[j]).bit_length(), trimmed[j]))
-            elif j == 0:  # to compute the difference between DC components
-                diff = int(array[i][j] - array[i - 1][j])
-                if diff != 0:
-                    encoded.append((diff.bit_length(), diff))
-                else:
-                    encoded.append((1, diff))
-                run_length = 0
-            elif trimmed[j] == 0:  # increment run_length by one in case of a zero
-                run_length += 1
-            else:  # intermediary steam representation of the AC components
-                encoded.append(
-                    (run_length, int(trimmed[j]).bit_length(), trimmed[j]))
-                run_length = 0
-            # send EOB
-        if not (encoded[len(encoded) - 1] == eob):
-            encoded.append(eob)
-    return encoded
-
+def run_length_encod(seq):
+  compressed = []
+  count = 1
+  char = seq[0]
+  print(char)
+  for i in range(1,len(seq)):
+    if seq[i] == char:
+      count = count + 1
+    else :
+      compressed.append((char,count))
+      char = seq[i]
+      count = 1
+  compressed.append((char,count))
+  return compressed
+ 
+def run_length_decoding(compressed_seq):
+  seq = []
+  for i in range(0,len(compressed_seq)):
+    for j in range(compressed_seq[i][1]):
+        seq.append(int(compressed_seq[i][0]))
+ 
+  return(seq)
 
 def get_freq_dict(array: list) -> dict:
     """
@@ -206,5 +136,4 @@ def apply_dct(vBlocksFor_, hBlocksFor_, _Padded, _Dct, _q, _Zigzag, windowSize):
                 _Dct[i * windowSize: i * windowSize + windowSize, j * windowSize: j * windowSize + windowSize])
 
             # Put the matrix form into a vector
-            _Zigzag[i * j] += zigzag(_q[i * windowSize: i * windowSize +
-                                     windowSize, j * windowSize: j * windowSize + windowSize])
+            _Zigzag.append(_q[i * windowSize: i * windowSize + windowSize, j * windowSize: j * windowSize + windowSize].flatten())

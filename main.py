@@ -7,13 +7,19 @@ from skimage.io import imshow, imread
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
+import urllib.request
 from math import ceil
 
 # define window size
 windowSize = 8
 
 # read image
-imgOriginal = imread('C:\\Users\\Usuario\\Desktop\\JPEG compresor\\migato.png')
+ruta = "descarga.jpg"
+urllib.request.urlretrieve("https://i.kym-cdn.com/photos/images/facebook/001/884/907/c86.jpg",
+                           ruta)
+
+
+imgOriginal = imread(ruta)
 
 
 # convert BGR to YCrCb
@@ -84,8 +90,7 @@ compressionColorRGB = cv2.cvtColor(
 
 # get DCT of each channel
 # define three empty matrices
-yDct, crDct, cbDct = np.zeros((yLength, yWidth)), np.zeros(
-    (cLength, cWidth)), np.zeros((cLength, cWidth))
+yDct, crDct, cbDct = np.zeros((yLength, yWidth)), np.zeros((cLength, cWidth)), np.zeros((cLength, cWidth))
 
 # number of iteration on x axis and y axis to calculate the luminance cosine transform values
 # number of blocks in the horizontal direction for luminance
@@ -103,9 +108,9 @@ yq, crq, cbq = np.zeros((yLength, yWidth)), np.zeros(
     (cLength, cWidth)), np.zeros((cLength, cWidth))
 
 # and another 3 for the zigzags
-yZigzag = np.zeros(((vBlocksForY * hBlocksForY), windowSize * windowSize))
-crZigzag = np.zeros(((vBlocksForC * hBlocksForC), windowSize * windowSize))
-cbZigzag = np.zeros(((vBlocksForC * hBlocksForC), windowSize * windowSize))
+yZigzag = []
+crZigzag = []
+cbZigzag = []
 
 # Calculates the DCT for the component Y of the image
 apply_dct(vBlocksForY, hBlocksForY, yPadded, yDct, yq, yZigzag, windowSize)
@@ -115,23 +120,24 @@ apply_dct(vBlocksForC, hBlocksForC, cbPadded, cbDct, cbq, cbZigzag, windowSize)
 
 
 # set type for the zigzag vector
-yZigzag = yZigzag.astype(np.int16)
-# set type for the zigzag vector
-crZigzag = crZigzag.astype(np.int16)
-cbZigzag = cbZigzag.astype(np.int16)
+yZigzag = np.array(yZigzag).astype(np.int16)
+crZigzag = np.array(crZigzag).astype(np.int16)
+cbZigzag = np.array(cbZigzag).astype(np.int16)
+
+print(yZigzag[0])
 
 # find the run length encoding for each channel
 # then get the frequency of each component in order to form a Huffman dictionary
 
-yEncoded = run_length_encoding(yZigzag)
+yEncoded = run_length_encod(yZigzag.flatten())
 yFrequencyTable = get_freq_dict(yEncoded)
 yHuffman = find_huffman(yFrequencyTable)
 
-crEncoded = run_length_encoding(crZigzag)
+crEncoded = run_length_encod(crZigzag.flatten())
 crFrequencyTable = get_freq_dict(crEncoded)
 crHuffman = find_huffman(crFrequencyTable)
 
-cbEncoded = run_length_encoding(cbZigzag)
+cbEncoded = run_length_encod(cbZigzag.flatten())
 cbFrequencyTable = get_freq_dict(cbEncoded)
 cbHuffman = find_huffman(cbFrequencyTable)
 
@@ -204,12 +210,16 @@ cbread = decodeFile.readline()
 decodeFile.close()
 
 ydecoded = decode_huffman(yread,invyHuffman)
-print(ydecoded[0:20])
-# crdecoded = decode_huffman(crread,invcrHuffman)
-# cbdecoded = decode_huffman(cbread,invcbHuffman)
+crdecoded = decode_huffman(crread,invcrHuffman)
+cbdecoded = decode_huffman(cbread,invcbHuffman)
+
+yraw = np.array(run_length_decoding(ydecoded))
+crraw = np.array(run_length_decoding(crdecoded))
+cbraw = np.array(run_length_decoding(cbdecoded))
 
 
 
 
+plt.show()
 
-
+#ydataimg = inv_dct(vBlocksForY, hBlocksForY, yimg, windowSize)
