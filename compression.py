@@ -141,6 +141,7 @@ invyHuffman = huffman.get_inverse_huffman(yHuffman)
 invcrHuffman = huffman.get_inverse_huffman(crHuffman)
 invcbHuffman = huffman.get_inverse_huffman(cbHuffman)
 
+#guardar en diferentes archivos!!!
 decodeFile = open("CompressedImage.asfh", "r")
 yread = decodeFile.readline()
 crread = decodeFile.readline()
@@ -155,11 +156,5 @@ yraw = np.array(run_legth.run_length_decoding(ydecoded))
 crraw = np.array(run_legth.run_length_decoding(crdecoded))
 cbraw = np.array(run_legth.run_length_decoding(cbdecoded))
 
-
-con1 = ydecoded == yEncoded
-con2 = crdecoded == crEncoded
-con3 = cbdecoded == cbEncoded
-
-input()
 
 #ydataimg = inv_dct(vBlocksForY, hBlocksForY, yimg, windowSize)
