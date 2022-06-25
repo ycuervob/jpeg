@@ -126,10 +126,9 @@ yrealBits = "".join(yBitsToTransmit)
 crrealBits = "".join(crBitsToTransmit)
 cbrealBits = "".join(cbBitsToTransmit)
 
-file = open("CompressedImage.asfh", "w")
-if file.writable():
-    file.write(yrealBits + "\n" + crrealBits + "\n" + cbrealBits)
-file.close()
+huffman.save_huff_code(yrealBits,"compression_y")
+huffman.save_huff_code(crrealBits,"compression_cr")
+huffman.save_huff_code(cbrealBits,"compression_cb")
 
 totalNumberOfBitsAfterCompression = len(yrealBits) + len(crrealBits) + len(cbrealBits)
 print("Compression Ratio is " + str(np.round(totalNumberOfBitsWithoutCompression/totalNumberOfBitsAfterCompression, 1)))
@@ -142,11 +141,9 @@ invcrHuffman = huffman.get_inverse_huffman(crHuffman)
 invcbHuffman = huffman.get_inverse_huffman(cbHuffman)
 
 #guardar en diferentes archivos!!!
-decodeFile = open("CompressedImage.asfh", "r")
-yread = decodeFile.readline()
-crread = decodeFile.readline()
-cbread = decodeFile.readline()
-decodeFile.close()
+yread = huffman.read_huff_file("compression_y")
+crread = huffman.read_huff_file("compression_cr")
+cbread = huffman.read_huff_file("compression_cb")
 
 ydecoded = huffman.decode_huffman(yread,invyHuffman)
 crdecoded = huffman.decode_huffman(crread,invcrHuffman)

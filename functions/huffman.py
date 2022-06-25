@@ -1,5 +1,17 @@
 from collections import Counter
 
+def read_huff_file(namefile):
+    decodeFile = open(namefile+".huffcode", "r")
+    read = decodeFile.readline()
+    decodeFile.close()
+    return read
+
+def save_huff_code(BitsToTransmit,name):
+    file = open(name+".huffcode", "w")
+    if file.writable():
+        file.write(BitsToTransmit)
+    file.close()
+
 def get_inverse_huffman(Huffman):
     invyHuffman = {}
     for i in Huffman.keys():
